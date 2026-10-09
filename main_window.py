@@ -11,7 +11,7 @@ Layout:
     Right  - tokenized code (TokenPanel) above table of variables (VariablePanel)
     Bottom - console (ConsolePanel) and a status bar
 
-Run (from the src folder):
+Run:
     python main_window.py
 """
 
