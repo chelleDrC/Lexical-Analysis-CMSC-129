@@ -1,11 +1,4 @@
-"""
-ui_token_panel.py (Member B)
-
-PLACEHOLDER - replace this file with Member B's version.
-main_window.py uses: show_tokens(tokens)
-
-Displays the tokenized code.
-"""
+"""Tokenized-code display for the compiler UI."""
 
 import tkinter as tk
 
