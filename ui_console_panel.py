@@ -7,11 +7,16 @@ class ConsolePanel(tk.LabelFrame):
 
     def __init__(self, parent):
         super().__init__(parent, text="Console")
-        self.text = tk.Text(self, height=6, state=tk.DISABLED, wrap=tk.WORD)
+        scrollbar = tk.Scrollbar(self)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.text = tk.Text(self, height=6, state=tk.DISABLED, wrap=tk.WORD, yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.text.yview)
+
         self.text.tag_configure("success", foreground="#1b7f3a")
         self.text.tag_configure("error", foreground="#b00020")
         self.text.tag_configure("heading", font=("TkDefaultFont", 9, "bold"))
-        self.text.pack(fill=tk.BOTH, expand=True)
+        self.text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
     def show_result(self, errors):
         self.text.config(state=tk.NORMAL)
