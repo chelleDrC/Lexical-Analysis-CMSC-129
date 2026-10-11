@@ -61,6 +61,12 @@ class Scanner:
                     ):
                         position += 1
 
+                    if position < len(line) and not line[position].isspace():
+                        position = self._consume_invalid_lexeme(line, position)
+                        lexeme = line[start:position]
+                        self._record_error(tokens, errors, lexeme, line_number)
+                        continue
+
                     lexeme = line[start:position]
                     token_type = lexeme if lexeme in KEYWORDS else "IDENT"
                     tokens.append(Token(token_type, lexeme, line_number))
@@ -81,8 +87,13 @@ class Scanner:
                         ):
                             position += 1
                         lexeme = line[start:position]
-                        tokens.append(Token("ERR_LEX", lexeme, line_number))
-                        errors.append(LexError(lexeme, line_number))
+                        self._record_error(tokens, errors, lexeme, line_number)
+                        continue
+
+                    if position < len(line) and not line[position].isspace():
+                        position = self._consume_invalid_lexeme(line, position)
+                        lexeme = line[start:position]
+                        self._record_error(tokens, errors, lexeme, line_number)
                         continue
 
                     lexeme = line[start:position]
@@ -97,11 +108,21 @@ class Scanner:
                     position += 1
 
                 lexeme = line[start:position]
-                tokens.append(Token("ERR_LEX", lexeme, line_number))
-                errors.append(LexError(lexeme, line_number))
+                self._record_error(tokens, errors, lexeme, line_number)
 
         variables = self._collect_variables(tokens)
         return LexResult(tokens, errors, variables)
+
+    def _consume_invalid_lexeme(self, line, position):
+        """Moves to the end of a whitespace-delimited invalid lexeme."""
+        while position < len(line) and not line[position].isspace():
+            position += 1
+        return position
+
+    def _record_error(self, tokens, errors, lexeme, line_number):
+        """Adds both the ERR_LEX token and its console/reporting data."""
+        tokens.append(Token("ERR_LEX", lexeme, line_number))
+        errors.append(LexError(lexeme, line_number))
 
     def _collect_variables(self, tokens):
         """Collect declarations of the form ``INT name`` or ``STR name``."""

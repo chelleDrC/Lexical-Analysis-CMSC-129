@@ -1,6 +1,8 @@
 import unittest
 
+from lex_data import LexError
 from lex_scanner import Scanner
+from ui_console_panel import ConsolePanel
 
 
 class ScannerTests(unittest.TestCase):
@@ -60,12 +62,50 @@ class ScannerTests(unittest.TestCase):
             ],
         )
 
+    def test_malformed_words_are_single_error_lexemes(self):
+        result = self.scanner.analyze("IOL\nINT num$ IS 3#\nPRINT abc_def\nLOI")
+
+        self.assertEqual(
+            [(error.lexeme, error.line) for error in result.errors],
+            [("num$", 2), ("3#", 2), ("abc_def", 3)],
+        )
+        self.assertEqual(
+            [(token.type, token.lexeme) for token in result.tokens],
+            [
+                ("IOL", "IOL"),
+                ("INT", "INT"),
+                ("ERR_LEX", "num$"),
+                ("IS", "IS"),
+                ("ERR_LEX", "3#"),
+                ("PRINT", "PRINT"),
+                ("ERR_LEX", "abc_def"),
+                ("LOI", "LOI"),
+            ],
+        )
+
     def test_blank_lines_preserve_source_line_numbers(self):
         result = self.scanner.analyze("IOL\n\nPRINT 1\nLOI")
 
         self.assertEqual(
             [(token.type, token.line) for token in result.tokens],
             [("IOL", 1), ("PRINT", 3), ("INT_LIT", 3), ("LOI", 4)],
+        )
+
+    def test_console_messages_are_built_from_errors(self):
+        self.assertEqual(
+            ConsolePanel.build_messages([]),
+            ["Lexical analysis successful. No lexical errors found."],
+        )
+
+        messages = ConsolePanel.build_messages([LexError("bad$", 4), LexError("@", 5)])
+
+        self.assertEqual(
+            messages,
+            [
+                "Lexical analysis failed. Found 2 lexical error(s):",
+                "ERR_LEX: unknown word 'bad$' at line 4",
+                "ERR_LEX: unknown word '@' at line 5",
+            ],
         )
 
 
