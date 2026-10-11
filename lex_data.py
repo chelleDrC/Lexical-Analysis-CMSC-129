@@ -1,12 +1,4 @@
-"""
-lex_data.py (Member B)
-
-PLACEHOLDER - replace this file with Member B's version.
-main_window.py uses: Token.type, Token.line, LexResult.tokens,
-LexResult.errors, LexResult.variables
-
-Data classes shared by the Scanner and the panels.
-"""
+"""Data classes shared by the IOL scanner and compiler UI panels."""
 
 
 class Token:
