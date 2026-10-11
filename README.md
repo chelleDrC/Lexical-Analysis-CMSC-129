@@ -1,57 +1,93 @@
 # PE02 Lexical Analysis
 
-Lexical analyzer for the IOL custom programming language, with a Tkinter compiler UI.
+Lexical analyzer for the official IOL (Integer-Oriented Language) custom programming language, featuring a Tkinter compiler graphical user interface.
 
-## Files
+## Group Members & Work Distribution
+
+| Member | Identifier | Role & Feature | Documentation |
+|---|---|---|---|
+| **Richelle De Arce** | Member A | **Editor and Flow**: Window layout, toolbar buttons, editor area, file I/O, compile pipeline trigger, token file writing | [`DOCUMENTATION_MemberA.md`](DOCUMENTATION_MemberA.md) |
+| **Johnric Apolinario** | Member B | **Tokenizer**: Scanner character scanning, line tracking, keyword and literal recognition, token data structures, token panel | [`DOCUMENTATION_MemberB.md`](DOCUMENTATION_MemberB.md) |
+| **John Andrei Manalo** | Member C | **Errors**: Lexical error detection (`ERR_LEX`), line number reporting, compiler console color-coded output and diagnostics | [`DOCUMENTATION_MemberC.md`](DOCUMENTATION_MemberC.md) |
+| **Mark Jaily Pena** | Member D | **Variables and Docs**: Table of variables panel with deduplication and scrolling, unit testing, master documentation, packaging | [`DOCUMENTATION_MemberD.md`](DOCUMENTATION_MemberD.md) |
+
+Comprehensive consolidated project documentation is available in [`DOCUMENTATION.md`](DOCUMENTATION.md).
+
+---
+
+## File Structure
+
+All program files sit together in the root project folder alongside the main program file (as required by PE02 instructions).
 
 ```
 Lexical-Analysis-CMSC-129/
 ├── main_window.py             Member A - main window, program entry point
-├── lex_data.py                Member B - Token, LexError, Variable, LexResult
-├── lex_scanner.py             Member B - lexical analyzer
-├── ui_console_panel.py        Member C - console messages
 ├── ui_editor_panel.py         Member A - editor area
+├── lex_data.py                Member B - Token, LexError, Variable, LexResult
+├── lex_scanner.py             Member B & C - lexical analyzer and error scanner
 ├── ui_token_panel.py          Member B - tokenized code display
-├── ui_variable_panel.py       Member D - table of variables
-├── build.bat                  Builds the executable
-├── CONTRACT.md                Class and method names shared by all members
+├── ui_console_panel.py        Member C - console messages
+├── ui_variable_panel.py       Member D - table of variables with deduplication
+├── build.bat                  Builds the Windows executable
+├── CONTRACT.md                Class and method interface contract
+├── DOCUMENTATION.md           Full group documentation report
 ├── DOCUMENTATION_MemberA.md   Member A documentation section
+├── DOCUMENTATION_MemberB.md   Member B documentation section
+├── DOCUMENTATION_MemberC.md   Member C documentation section
+├── DOCUMENTATION_MemberD.md   Member D documentation section
+├── test_lex_scanner.py        Unit tests for scanner and console
+├── test_ui_variable_panel.py  Unit tests for variable panel
+├── sample.iol                 Sample IOL source code file
 ├── README.md
 └── .gitignore
 ```
 
-All program files stay in one folder, with no subfolders. The PE02 instructions require all program files to sit together with the main program file.
+---
 
-File name prefixes group the files by role:
+## Running the Application
 
-| Prefix | Role |
-|---|---|
-| `main_` | Program entry point |
-| `ui_` | User interface panels |
-| `lex_` | Lexical analysis logic and data |
+Requires Python 3.8+ (standard library only; Tkinter is built-in):
 
-Files marked **PLACEHOLDER** in their header are stubs. Each member replaces their own file. See [CONTRACT.md](CONTRACT.md).
-
-## Run
-
-```
+```bash
 python main_window.py
 ```
 
-## Build Executable
+---
 
+## Running Automated Tests
+
+Run the full test suite covering the scanner, error reporting, and table of variables:
+
+```bash
+python -m unittest discover
 ```
-pip install pyinstaller
-build.bat
-```
 
-Output: `dist\LexicalAnalyzer.exe`
+---
 
-## Submission
+## Building the Executable
 
-Zip file named with surnames in alphabetical order, separated by underscores, followed by the PE number. Example: `Bonifacio_Rizal_PE02.zip`
+Using PyInstaller:
 
-Contents:
-- Documentation file (combined from each member's documentation section)
-- Source code files (`*.py`)
-- Executable file (`LexicalAnalyzer.exe`)
+- **Windows**:
+  ```cmd
+  build.bat
+  ```
+  Output: `dist\LexicalAnalyzer.exe`
+
+- **Linux**:
+  ```bash
+  pyinstaller --onefile --windowed --name LexicalAnalyzer main_window.py
+  ```
+  Output: `dist/LexicalAnalyzer`
+
+---
+
+## Submission Archive
+
+Zip the files named in alphabetical order of group members' surnames:
+**`Apolinario_DeArce_Manalo_Pena_PE02.zip`**
+
+Contains:
+1. Documentation file (`DOCUMENTATION.md` or PDF/DOCX)
+2. Program source code files (`*.py`, `sample.iol`, etc.)
+3. Executable file (`dist/LexicalAnalyzer.exe` or `dist/LexicalAnalyzer`)

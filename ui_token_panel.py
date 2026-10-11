@@ -6,9 +6,15 @@ import tkinter as tk
 class TokenPanel(tk.LabelFrame):
 
     def __init__(self, parent):
-        super().__init__(parent, text="Tokenized Code (Member B)")
-        self.text = tk.Text(self, state=tk.DISABLED)
-        self.text.pack(fill=tk.BOTH, expand=True)
+        super().__init__(parent, text="Tokenized Code")
+
+        scrollbar = tk.Scrollbar(self)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        self.text = tk.Text(self, state=tk.DISABLED, yscrollcommand=scrollbar.set)
+        self.text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        scrollbar.config(command=self.text.yview)
 
     def show_tokens(self, tokens):
         self.text.config(state=tk.NORMAL)
