@@ -43,6 +43,7 @@ class PredictiveParser:
         non_terminals = set(table.non_terminals)
         seen_states: set[tuple[tuple[str, ...], int]] = set()
         position = 0
+        steps.append(ParseStep(" ".join(stack), " ".join(input_buffer), ""))
 
         while stack:
             stack_text = " ".join(stack)
@@ -71,13 +72,20 @@ class PredictiveParser:
                         steps, "", " ".join(input_buffer[position:]),
                         "Error: input remains after the end marker.",
                     )
+                steps[-1] = ParseStep("", "", "Match $")
                 return ParseResult(steps=steps, valid=True)
 
             if top not in non_terminals:
                 if top == lookahead:
-                    steps.append(ParseStep(stack_text, input_text, f"Match {top}"))
                     stack.pop(0)
                     position += 1
+                    steps.append(
+                        ParseStep(
+                            " ".join(stack),
+                            " ".join(input_buffer[position:]),
+                            f"Match {top}",
+                        )
+                    )
                     continue
                 return PredictiveParser._error(
                     steps, stack_text, input_text,
@@ -100,9 +108,15 @@ class PredictiveParser:
                     f"{production_id}.",
                 )
 
-            steps.append(ParseStep(stack_text, input_text, f"Output {production}"))
             stack.pop(0)
             stack[:0] = production.rhs
+            steps.append(
+                ParseStep(
+                    " ".join(stack),
+                    " ".join(input_buffer[position:]),
+                    f"Output {production}",
+                )
+            )
 
         if position < len(input_buffer):
             return PredictiveParser._error(

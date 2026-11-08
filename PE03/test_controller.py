@@ -166,8 +166,9 @@ class TestParseAndSave(ControllerTestBase):
             "PARSING: Valid. Please see test_rules.prsd.",
         )
         rows = self.read_csv(expected)
-        self.assertEqual(rows[0], ["E $", "id + id * id $", "Output E > T E'"])
-        self.assertEqual(rows[-1], ["$", "$", "Match $"])
+        self.assertEqual(rows[0], ["E $", "id + id * id $", ""])
+        self.assertEqual(rows[1], ["T E' $", "id + id * id $", "Output E > T E'"])
+        self.assertEqual(rows[-1], ["", "", "Match $"])
 
     def test_invalid_input_ends_with_error_row(self):
         view, ctrl = self.loaded("id id")

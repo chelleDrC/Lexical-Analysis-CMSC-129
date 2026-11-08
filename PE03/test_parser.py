@@ -44,8 +44,11 @@ class PredictiveParserTests(unittest.TestCase):
     def test_valid_expression(self):
         result = PredictiveParser.parse(PRODUCTIONS, TABLE, Tokenizer.tokenize("id + id * id"))
         self.assertTrue(result.valid)
-        self.assertEqual(result.steps[0].action, "Output E > T E'")
+        self.assertEqual(result.steps[0].action, "")
+        self.assertEqual(result.steps[1].action, "Output E > T E'")
         self.assertEqual(result.steps[-1].action, "Match $")
+        self.assertEqual(result.steps[-1].stack, "")
+        self.assertEqual(result.steps[-1].input, "")
 
     def test_empty_input_is_invalid(self):
         result = self.assert_invalid_parse("")
