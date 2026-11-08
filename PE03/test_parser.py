@@ -60,6 +60,21 @@ class PredictiveParserTests(unittest.TestCase):
         result = PredictiveParser.parse(PRODUCTIONS, TABLE, "( id )")
         self.assertTrue(result.valid)
 
+    def test_rejects_input_after_end_marker(self):
+        result = self.assert_invalid_parse("id $ id")
+        self.assertIn("remains after the end marker", result.error_message)
+
+    def test_stops_non_consuming_recursive_production(self):
+        productions = [Production(1, "S", ["S"])]
+        table = ParseTable(
+            terminals=["$"],
+            non_terminals=["S"],
+            table={"S": {"$": 1}},
+        )
+        result = PredictiveParser.parse(productions, table, "")
+        self.assertFalse(result.valid)
+        self.assertIn("non-consuming recursive", result.error_message)
+
 
 if __name__ == "__main__":
     unittest.main()

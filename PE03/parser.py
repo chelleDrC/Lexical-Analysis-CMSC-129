@@ -41,6 +41,7 @@ class PredictiveParser:
         stack = [start.non_terminal, END_MARKER]
         steps: list[ParseStep] = []
         non_terminals = set(table.non_terminals)
+        seen_states: set[tuple[tuple[str, ...], int]] = set()
         position = 0
 
         while stack:
@@ -48,6 +49,13 @@ class PredictiveParser:
             input_text = " ".join(input_buffer[position:])
             top = stack[0]
             lookahead = input_buffer[position]
+            state = (tuple(stack), position)
+            if state in seen_states:
+                return PredictiveParser._error(
+                    steps, stack_text, input_text,
+                    "Error: parser detected a non-consuming recursive production.",
+                )
+            seen_states.add(state)
 
             if top == END_MARKER:
                 if lookahead != END_MARKER:
@@ -58,6 +66,11 @@ class PredictiveParser:
                 steps.append(ParseStep(stack_text, input_text, "Match $"))
                 stack.pop(0)
                 position += 1
+                if position < len(input_buffer):
+                    return PredictiveParser._error(
+                        steps, "", " ".join(input_buffer[position:]),
+                        "Error: input remains after the end marker.",
+                    )
                 return ParseResult(steps=steps, valid=True)
 
             if top not in non_terminals:
