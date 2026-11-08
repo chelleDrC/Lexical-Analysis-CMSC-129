@@ -1,6 +1,6 @@
 import unittest
 
-from parse_data import ParseTable, Production
+from parse_data import ParseStep, ParseTable, Production
 from parser import PredictiveParser, Tokenizer
 
 
@@ -44,8 +44,47 @@ class PredictiveParserTests(unittest.TestCase):
     def test_valid_expression(self):
         result = PredictiveParser.parse(PRODUCTIONS, TABLE, Tokenizer.tokenize("id + id * id"))
         self.assertTrue(result.valid)
-        self.assertEqual(result.steps[0].action, "Output E > T E'")
-        self.assertEqual(result.steps[-1].action, "Match $")
+        self.assertEqual(result.steps[0].action, "")
+        self.assertEqual(result.steps[1].action, "Output E > T E'")
+        self.assertEqual(result.steps[-1], ParseStep("", "", "Match $"))
+
+    def test_matches_handout_sample_output(self):
+        # The sample solution from the handout for "id + id * id".
+        expected = [
+            ("E $", "id + id * id $", ""),
+            ("T E' $", "id + id * id $", "Output E > T E'"),
+            ("F T' E' $", "id + id * id $", "Output T > F T'"),
+            ("id T' E' $", "id + id * id $", "Output F > id"),
+            ("T' E' $", "+ id * id $", "Match id"),
+            ("E' $", "+ id * id $", "Output T' > e"),
+            ("+ T E' $", "+ id * id $", "Output E' > + T E'"),
+            ("T E' $", "id * id $", "Match +"),
+            ("F T' E' $", "id * id $", "Output T > F T'"),
+            ("id T' E' $", "id * id $", "Output F > id"),
+            ("T' E' $", "* id $", "Match id"),
+            ("* F T' E' $", "* id $", "Output T' > * F T'"),
+            ("F T' E' $", "id $", "Match *"),
+            ("id T' E' $", "id $", "Output F > id"),
+            ("T' E' $", "$", "Match id"),
+            ("E' $", "$", "Output T' > e"),
+            ("$", "$", "Output E' > e"),
+            ("", "", "Match $"),
+        ]
+        result = PredictiveParser.parse(PRODUCTIONS, TABLE, "id + id * id")
+        actual = [(s.stack, s.input, s.action) for s in result.steps]
+        self.assertEqual(actual, expected)
+
+    def test_invalid_input_ends_with_extra_error_row(self):
+        result = self.assert_invalid_parse("id id")
+        actual = [(s.stack, s.input, s.action) for s in result.steps]
+        self.assertEqual(actual, [
+            ("E $", "id id $", ""),
+            ("T E' $", "id id $", "Output E > T E'"),
+            ("F T' E' $", "id id $", "Output T > F T'"),
+            ("id T' E' $", "id id $", "Output F > id"),
+            ("T' E' $", "id $", "Match id"),
+            ("", "", "Error: no production for T' with input id."),
+        ])
 
     def test_empty_input_is_invalid(self):
         result = self.assert_invalid_parse("")

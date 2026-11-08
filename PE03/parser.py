@@ -39,20 +39,22 @@ class PredictiveParser:
             )
 
         stack = [start.non_terminal, END_MARKER]
-        steps: list[ParseStep] = []
         non_terminals = set(table.non_terminals)
         seen_states: set[tuple[tuple[str, ...], int]] = set()
         position = 0
 
+        # Each row shows the stack and input AFTER an action, together with
+        # the action that produced them. The first row is the starting state,
+        # so it has no action (this matches the handout's sample output).
+        steps = [PredictiveParser._row(stack, input_buffer, position, "")]
+
         while stack:
-            stack_text = " ".join(stack)
-            input_text = " ".join(input_buffer[position:])
             top = stack[0]
             lookahead = input_buffer[position]
             state = (tuple(stack), position)
             if state in seen_states:
                 return PredictiveParser._error(
-                    steps, stack_text, input_text,
+                    steps,
                     "Error: parser detected a non-consuming recursive production.",
                 )
             seen_states.add(state)
@@ -60,56 +62,60 @@ class PredictiveParser:
             if top == END_MARKER:
                 if lookahead != END_MARKER:
                     return PredictiveParser._error(
-                        steps, stack_text, input_text,
-                        f"Error: expected {END_MARKER}, found {lookahead}.",
+                        steps, f"Error: expected {END_MARKER}, found {lookahead}."
                     )
-                steps.append(ParseStep(stack_text, input_text, "Match $"))
                 stack.pop(0)
                 position += 1
+                steps.append(PredictiveParser._row(stack, input_buffer, position, "Match $"))
                 if position < len(input_buffer):
                     return PredictiveParser._error(
-                        steps, "", " ".join(input_buffer[position:]),
-                        "Error: input remains after the end marker.",
+                        steps, "Error: input remains after the end marker."
                     )
                 return ParseResult(steps=steps, valid=True)
 
             if top not in non_terminals:
                 if top == lookahead:
-                    steps.append(ParseStep(stack_text, input_text, f"Match {top}"))
                     stack.pop(0)
                     position += 1
+                    steps.append(
+                        PredictiveParser._row(stack, input_buffer, position, f"Match {top}")
+                    )
                     continue
                 return PredictiveParser._error(
-                    steps, stack_text, input_text,
-                    f"Error: expected {top}, found {lookahead}.",
+                    steps, f"Error: expected {top}, found {lookahead}."
                 )
 
             production_id = table.get(top, lookahead)
             if production_id is None:
                 return PredictiveParser._error(
-                    steps, stack_text, input_text,
-                    f"Error: no production for {top} with input "
-                    f"{lookahead}.",
+                    steps, f"Error: no production for {top} with input {lookahead}."
                 )
 
             production = by_id.get(production_id)
             if production is None:
                 return PredictiveParser._error(
-                    steps, stack_text, input_text,
-                    f"Error: parse table refers to missing production "
-                    f"{production_id}.",
+                    steps,
+                    f"Error: parse table refers to missing production {production_id}.",
                 )
 
-            steps.append(ParseStep(stack_text, input_text, f"Output {production}"))
             stack.pop(0)
             stack[:0] = production.rhs
+            steps.append(
+                PredictiveParser._row(stack, input_buffer, position, f"Output {production}")
+            )
 
         if position < len(input_buffer):
             return PredictiveParser._error(
-                steps, "", " ".join(input_buffer[position:]),
-                "Error: input remains after the stack is empty.",
+                steps, "Error: input remains after the stack is empty."
             )
         return ParseResult(steps=steps, valid=True)
+
+    @staticmethod
+    def _row(
+        stack: list[str], input_buffer: list[str], position: int, action: str
+    ) -> ParseStep:
+        """One solution row: the current stack, the remaining input, and the action."""
+        return ParseStep(" ".join(stack), " ".join(input_buffer[position:]), action)
 
     @staticmethod
     def _normalize_tokens(tokens: list[str]) -> list[str]:
@@ -119,10 +125,13 @@ class PredictiveParser:
         return input_buffer
 
     @staticmethod
-    def _error(
-        steps: list[ParseStep], stack: str, input_text: str, message: str
-    ) -> ParseResult:
-        steps.append(ParseStep(stack, input_text, message))
+    def _error(steps: list[ParseStep], message: str) -> ParseResult:
+        """Stop parsing: keep the steps so far and add one extra error row.
+
+        The error row has empty stack and input columns, with the message in
+        the Action column, as the handout asks.
+        """
+        steps.append(ParseStep("", "", message))
         return ParseResult(
             steps=steps,
             valid=False,

@@ -65,11 +65,16 @@ class PrsdWriter:
         """Write the parse steps as CSV rows and return the saved file's path.
 
         Each row is: stack, input buffer, action. The csv module quotes any
-        field that contains a comma. Raises OSError if the file cannot be written.
+        field that contains a comma. The first row (the starting state) has no
+        action, so it is written with two fields, as in the handout's sample:
+        ``E $,id + id * id $``. Raises OSError if the file cannot be written.
         """
         path = PrsdWriter.output_path(outname, prod_path)
         with open(path, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             for step in result.steps:
-                writer.writerow([step.stack, step.input, step.action])
+                row = [step.stack, step.input]
+                if step.action:
+                    row.append(step.action)
+                writer.writerow(row)
         return path

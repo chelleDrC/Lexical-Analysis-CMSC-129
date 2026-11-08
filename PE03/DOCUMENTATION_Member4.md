@@ -23,11 +23,11 @@ the previous file in use.
 
 1. **Start:** `main.py` creates the view and the controller. Parse starts disabled.
 2. **Load:** the user clicks Load and picks a file.
-   - Cancel: nothing changes.
-   - Otherwise the solution table and PARSING message are cleared.
+   - The solution table and PARSING message are cleared on every attempt.
+   - Cancel: the loaded files stay as they were.
    - The file type is read from its extension (`.prod` or `.ptbl`).
-   - The matching loader runs. On `LoadError` an error box is shown and the
-     previous file stays loaded.
+   - The matching loader runs. On `LoadError` an error box is shown, the
+     previous file stays loaded, and any file-mismatch message is shown again.
    - On success the file is stored and shown in its table, and the LOADED
      message is updated.
    - If both files are loaded, they are checked together (`check_pair`). A
@@ -43,10 +43,13 @@ the previous file in use.
      file: the prompt is shown again.
    - Otherwise the file `outname_prodname.prsd` is written to the folder of
      the productions file, one row per step: stack, input buffer, action.
-     Fields with commas are quoted automatically by the `csv` module.
+     The first row is the starting state with no action, and a valid run ends
+     with `,,Match $`, as in the handout. Fields with commas are quoted
+     automatically by the `csv` module.
 6. **Result:** the PARSING message shows `Valid. Please see <file>.` or
-   `Invalid. Please see <file>.`. For an invalid input, the file ends with the
-   error row, whose action starts with `Error:`.
+   `Invalid. Please see <file>.`. For an invalid input, the file holds the
+   steps up to where parsing stopped, then one extra row with empty Stack and
+   Input and the `Error:` message in Action.
 
 ## Interface With Other Members
 
@@ -67,8 +70,8 @@ python -m unittest test_controller -v
 
 | Area | Checked |
 |---|---|
-| Cancel after a good load | Old files and solution stay as they were. |
-| Bad file after a good load | Old file stays loaded; error shown. |
+| Cancel after a good load | Old files stay loaded; solution table cleared. |
+| Bad file after a good load | Old file stays loaded; error shown; mismatch message kept. |
 | Load attempts | Solution table cleared on every real attempt. |
 | Parse enable | Disabled until both files load; disabled for empty input; disabled for mismatched names. |
 | Output name and location | `test_rules.prsd` in the productions file's folder. |

@@ -53,7 +53,7 @@ class ControllerTestBase(unittest.TestCase):
 
 class TestLoading(ControllerTestBase):
 
-    def test_cancel_keeps_loaded_file_and_does_not_clear(self):
+    def test_cancel_keeps_loaded_file_but_clears_solution(self):
         view = make_view()
         ctrl = Controller(view)
         self.load(ctrl, view, self.prod)
@@ -63,8 +63,23 @@ class TestLoading(ControllerTestBase):
         ctrl.on_load()
 
         self.assertIsNotNone(ctrl.productions)
-        view.clear_solution_table.assert_not_called()
+        view.clear_solution_table.assert_called_once()
         view.set_productions.assert_not_called()
+
+    def test_failed_load_shows_mismatch_message_again(self):
+        other = os.path.join(self.folder, "other.ptbl")
+        shutil.copy(SAMPLE_PTBL, other)
+        view = make_view("id")
+        ctrl = Controller(view)
+        self.load(ctrl, view, self.prod)
+        self.load(ctrl, view, other)  # names do not match
+
+        broken = os.path.join(self.folder, "broken.prod")
+        with open(broken, "w", encoding="utf-8") as f:
+            f.write('"never closed\n')
+        self.load(ctrl, view, broken)
+
+        self.assertIn("do not match", view.set_parsing_message.call_args.args[0])
 
     def test_bad_file_after_good_load_keeps_old_file(self):
         view = make_view()
@@ -166,8 +181,10 @@ class TestParseAndSave(ControllerTestBase):
             "PARSING: Valid. Please see test_rules.prsd.",
         )
         rows = self.read_csv(expected)
-        self.assertEqual(rows[0], ["E $", "id + id * id $", "Output E > T E'"])
-        self.assertEqual(rows[-1], ["$", "$", "Match $"])
+        self.assertEqual(rows[0], ["E $", "id + id * id $"])  # no action, no trailing comma
+        self.assertEqual(rows[1], ["T E' $", "id + id * id $", "Output E > T E'"])
+        self.assertEqual(rows[-1], ["", "", "Match $"])
+        self.assertEqual(len(rows), 18)  # same number of rows as the handout sample
 
     def test_invalid_input_ends_with_error_row(self):
         view, ctrl = self.loaded("id id")
@@ -179,6 +196,8 @@ class TestParseAndSave(ControllerTestBase):
             "PARSING: Invalid. Please see test_rules.prsd.",
         )
         rows = self.read_csv(expected)
+        self.assertEqual(rows[-2], ["T' E' $", "id $", "Match id"])  # last good step
+        self.assertEqual(rows[-1][:2], ["", ""])  # extra error row
         self.assertTrue(rows[-1][2].startswith("Error:"))
 
     def test_cancelled_output_name_saves_nothing(self):

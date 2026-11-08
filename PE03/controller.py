@@ -44,12 +44,16 @@ class Controller:
     def on_load(self) -> None:
         """Load one .prod or .ptbl file chosen by the user."""
         path = self.view.choose_file()
-        if not path:
-            return  # Cancelled: keep the files that are already loaded.
 
-        # Every real load attempt clears the old solution first.
+        # Every load attempt clears the old solution, even a cancelled one:
+        # the handout counts a cancel as an unsuccessful load.
         self.view.clear_solution_table()
         self.view.set_parsing_message("")
+
+        if not path:
+            # Cancelled: keep the loaded files, but show any problem again.
+            self.view.set_parsing_message(self.pair_problem or "")
+            return
 
         try:
             if file_type(path) == PROD_EXT:
@@ -58,6 +62,8 @@ class Controller:
                 self._load_table(path)
         except LoadError as error:
             messagebox.showerror("Cannot load file", str(error), parent=self.view.root)
+            # The old files are still loaded, so show their problem again (if any).
+            self.view.set_parsing_message(self.pair_problem or "")
             return
 
         self.pair_problem = self._check_pair()
